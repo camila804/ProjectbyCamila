@@ -1,202 +1,520 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Project by Camila</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    body { font-family: Arial; background:#f5f5f5; padding:20px; }
-    h1 { text-align:center; }
-    .section { background:white; padding:15px; margin-bottom:20px; border-radius:12px; }
-    .exercise { margin-bottom:15px; }
-    input { margin:3px; }
-    button { padding:5px 10px; border:none; background:black; color:white; border-radius:5px; }
-  </style>
-</head>
-<body>
+import React, { useMemo, useState } from "react";
+import { CalendarDays, CheckCircle2, Circle, Dumbbell, NotebookPen, Plus, Save, Trash2, Upload, UserRound } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 
-<h1>Project by Camila</h1>
+const initialWorkouts = {
+  "Lower 1": [
+    "Hamstring stretch",
+    "Hip opener (90/90)",
+    "Banded lateral walk",
+    "Hip Thrust",
+    "Romanian Deadlift",
+    "Bulgarian Split Squat",
+    "Cable Kickback",
+    "Hip Abduction",
+  ],
+  "Upper 1": [
+    "Wall Slides",
+    "Glute Bridge Hold",
+    "Dead Bug",
+    "Thoracic rotation",
+    "Chest opener",
+    "Face Pull",
+    "Lateral Raise",
+    "Arnold Press",
+    "Seated Row",
+  ],
+  "Lower 2": [
+    "Hip flexor stretch",
+    "Hamstring light",
+    "Ankle mobility",
+    "Sumo Squat",
+    "Leg Press",
+    "Step-Up",
+    "Hip Thrust (light)",
+    "Abduction",
+  ],
+  "Upper 2": [
+    "Scapular pull / Face pull light",
+    "Cable Kickback light",
+    "Plank",
+    "Chest opener",
+    "Thoracic mobility",
+    "Neck mobility",
+    "Lat Pulldown",
+    "Seated Row",
+    "Chest Press",
+    "Lateral Raise",
+  ],
+  "Lower 3": [
+    "Hip opener",
+    "Hamstring stretch",
+    "Single Leg Hip Thrust",
+    "Glute Bridge",
+    "Cable Kickback",
+    "Frog Pumps",
+    "Fire Hydrant",
+  ],
+  "Upper 3": [
+    "Y-T Raises",
+    "Bridge March",
+    "Brace Hold",
+    "Thoracic extension",
+    "Shoulder mobility",
+    "Lateral Raise",
+    "Front Raise",
+    "Reverse Fly",
+    "Face Pull",
+  ],
+};
 
-<script>
-function toggle(id){
-  let el = document.getElementById(id);
-  el.style.display = el.style.display === "none" ? "block" : "none";
+const dayNames = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+
+const emptyDayPlan = () => ({
+  workout: "",
+  checks: {},
+  logs: {},
+  notes: "",
+});
+
+const initialSchedule = dayNames.reduce((acc, day) => {
+  acc[day] = emptyDayPlan();
+  return acc;
+}, {});
+
+const initialMetrics = {
+  weight: "",
+  bodyFat: "",
+  waist: "",
+  hips: "",
+  glutes: "",
+  thigh: "",
+  arm: "",
+  notes: "",
+};
+
+export default function WorkoutTrackerApp() {
+  const [schedule, setSchedule] = useState(initialSchedule);
+  const [selectedDay, setSelectedDay] = useState("Monday");
+  const [customWorkoutName, setCustomWorkoutName] = useState("");
+  const [customExercise, setCustomExercise] = useState("");
+  const [workouts, setWorkouts] = useState(initialWorkouts);
+  const [metrics, setMetrics] = useState(initialMetrics);
+  const [progressEntries, setProgressEntries] = useState([]);
+  const [photoPreviews, setPhotoPreviews] = useState([]);
+
+  const currentPlan = schedule[selectedDay];
+  const currentExercises = useMemo(() => {
+    if (!currentPlan.workout) return [];
+    return workouts[currentPlan.workout] || [];
+  }, [currentPlan.workout, workouts]);
+
+  function updateSelectedDay(updater) {
+    setSchedule((prev) => ({
+      ...prev,
+      [selectedDay]: updater(prev[selectedDay]),
+    }));
+  }
+
+  function assignWorkoutToDay(workoutName) {
+    setSchedule((prev) => ({
+      ...prev,
+      [selectedDay]: {
+        ...emptyDayPlan(),
+        workout: workoutName,
+      },
+    }));
+  }
+
+  function toggleCheck(exercise) {
+    updateSelectedDay((day) => ({
+      ...day,
+      checks: {
+        ...day.checks,
+        [exercise]: !day.checks[exercise],
+      },
+    }));
+  }
+
+  function updateLog(exercise, field, value) {
+    updateSelectedDay((day) => ({
+      ...day,
+      logs: {
+        ...day.logs,
+        [exercise]: {
+          ...(day.logs[exercise] || { weight: "", reps: "", notes: "" }),
+          [field]: value,
+        },
+      },
+    }));
+  }
+
+  function addWorkout() {
+    const name = customWorkoutName.trim();
+    if (!name || workouts[name]) return;
+    setWorkouts((prev) => ({ ...prev, [name]: [] }));
+    setCustomWorkoutName("");
+  }
+
+  function addExerciseToWorkout() {
+    const workoutName = currentPlan.workout;
+    const exercise = customExercise.trim();
+    if (!workoutName || !exercise) return;
+    setWorkouts((prev) => ({
+      ...prev,
+      [workoutName]: [...(prev[workoutName] || []), exercise],
+    }));
+    setCustomExercise("");
+  }
+
+  function saveProgressSnapshot() {
+    const today = new Date().toLocaleDateString();
+    setProgressEntries((prev) => [
+      {
+        id: crypto.randomUUID(),
+        date: today,
+        ...metrics,
+      },
+      ...prev,
+    ]);
+  }
+
+  function deleteProgressEntry(id) {
+    setProgressEntries((prev) => prev.filter((entry) => entry.id !== id));
+  }
+
+  function handlePhotoUpload(event) {
+    const files = Array.from(event.target.files || []);
+    const newPhotos = files.map((file) => ({
+      id: crypto.randomUUID(),
+      name: file.name,
+      url: URL.createObjectURL(file),
+    }));
+    setPhotoPreviews((prev) => [...newPhotos, ...prev]);
+  }
+
+  function removePhoto(id) {
+    setPhotoPreviews((prev) => prev.filter((photo) => photo.id !== id));
+  }
+
+  const completionCount = currentExercises.filter((ex) => currentPlan.checks[ex]).length;
+
+  return (
+    <div className="min-h-screen bg-neutral-50 p-4 md:p-8">
+      <div className="mx-auto max-w-7xl space-y-6">
+        <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+          <div>
+            <p className="text-sm uppercase tracking-[0.25em] text-neutral-500">Personal training dashboard</p>
+            <h1 className="mt-2 text-3xl font-semibold text-neutral-900">Workout tracker</h1>
+            <p className="mt-2 max-w-2xl text-sm text-neutral-600">
+              Organize your weekly split, tick off exercises, log weights and reps, and track your body progress in one place.
+            </p>
+          </div>
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
+            <StatCard label="Selected day" value={selectedDay} icon={<CalendarDays className="h-4 w-4" />} />
+            <StatCard label="Workout" value={currentPlan.workout || "None"} icon={<Dumbbell className="h-4 w-4" />} />
+            <StatCard label="Completed" value={`${completionCount}/${currentExercises.length || 0}`} icon={<CheckCircle2 className="h-4 w-4" />} />
+          </div>
+        </div>
+
+        <Tabs defaultValue="planner" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-3 rounded-2xl bg-white p-1 shadow-sm">
+            <TabsTrigger value="planner" className="rounded-xl">Planner</TabsTrigger>
+            <TabsTrigger value="workouts" className="rounded-xl">Workouts</TabsTrigger>
+            <TabsTrigger value="progress" className="rounded-xl">Progress</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="planner" className="space-y-6">
+            <div className="grid gap-6 lg:grid-cols-[320px,1fr]">
+              <Card className="rounded-3xl border-0 shadow-sm">
+                <CardHeader>
+                  <CardTitle className="text-lg">Weekly calendar</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {dayNames.map((day) => (
+                    <button
+                      key={day}
+                      onClick={() => setSelectedDay(day)}
+                      className={`w-full rounded-2xl border px-4 py-3 text-left transition ${
+                        selectedDay === day
+                          ? "border-neutral-900 bg-neutral-900 text-white"
+                          : "border-neutral-200 bg-white hover:border-neutral-400"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <p className="font-medium">{day}</p>
+                          <p className={`text-xs ${selectedDay === day ? "text-neutral-300" : "text-neutral-500"}`}>
+                            {schedule[day].workout || "No workout selected"}
+                          </p>
+                        </div>
+                        {schedule[day].workout ? <Badge variant="secondary" className="rounded-full">Assigned</Badge> : null}
+                      </div>
+                    </button>
+                  ))}
+                </CardContent>
+              </Card>
+
+              <div className="space-y-6">
+                <Card className="rounded-3xl border-0 shadow-sm">
+                  <CardHeader>
+                    <CardTitle className="text-lg">Assign workout to {selectedDay}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="grid gap-3 md:grid-cols-3">
+                    {Object.keys(workouts).map((workoutName) => (
+                      <button
+                        key={workoutName}
+                        onClick={() => assignWorkoutToDay(workoutName)}
+                        className={`rounded-2xl border p-4 text-left transition ${
+                          currentPlan.workout === workoutName
+                            ? "border-neutral-900 bg-neutral-900 text-white"
+                            : "border-neutral-200 bg-white hover:border-neutral-400"
+                        }`}
+                      >
+                        <p className="font-medium">{workoutName}</p>
+                        <p className={`mt-1 text-xs ${currentPlan.workout === workoutName ? "text-neutral-300" : "text-neutral-500"}`}>
+                          {workouts[workoutName].length} exercises
+                        </p>
+                      </button>
+                    ))}
+                  </CardContent>
+                </Card>
+
+                <Card className="rounded-3xl border-0 shadow-sm">
+                  <CardHeader>
+                    <CardTitle className="text-lg">Checklist and training log</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {!currentPlan.workout ? (
+                      <div className="rounded-2xl border border-dashed border-neutral-300 p-8 text-sm text-neutral-500">
+                        Pick a workout for this day to start checking off exercises.
+                      </div>
+                    ) : (
+                      currentExercises.map((exercise) => {
+                        const done = !!currentPlan.checks[exercise];
+                        const log = currentPlan.logs[exercise] || { weight: "", reps: "", notes: "" };
+                        return (
+                          <div key={exercise} className="rounded-2xl border border-neutral-200 p-4">
+                            <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                              <button
+                                onClick={() => toggleCheck(exercise)}
+                                className="flex items-center gap-3 text-left"
+                              >
+                                {done ? <CheckCircle2 className="h-5 w-5" /> : <Circle className="h-5 w-5" />}
+                                <div>
+                                  <p className={`font-medium ${done ? "line-through text-neutral-400" : "text-neutral-900"}`}>{exercise}</p>
+                                  <p className="text-xs text-neutral-500">Mark done and save your numbers below</p>
+                                </div>
+                              </button>
+                              <Badge className="rounded-full bg-neutral-100 text-neutral-700 hover:bg-neutral-100">{currentPlan.workout}</Badge>
+                            </div>
+                            <div className="mt-4 grid gap-3 md:grid-cols-[120px,120px,1fr]">
+                              <Input
+                                placeholder="Weight"
+                                value={log.weight}
+                                onChange={(e) => updateLog(exercise, "weight", e.target.value)}
+                              />
+                              <Input
+                                placeholder="Reps"
+                                value={log.reps}
+                                onChange={(e) => updateLog(exercise, "reps", e.target.value)}
+                              />
+                              <Input
+                                placeholder="Notes"
+                                value={log.notes}
+                                onChange={(e) => updateLog(exercise, "notes", e.target.value)}
+                              />
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
+
+                    <div className="space-y-2 pt-2">
+                      <p className="text-sm font-medium text-neutral-800">Day notes</p>
+                      <Textarea
+                        placeholder="How did today feel? Any pain, PRs, adjustments, cardio notes..."
+                        value={currentPlan.notes}
+                        onChange={(e) => updateSelectedDay((day) => ({ ...day, notes: e.target.value }))}
+                        className="min-h-[110px]"
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="workouts" className="space-y-6">
+            <div className="grid gap-6 lg:grid-cols-[340px,1fr]">
+              <Card className="rounded-3xl border-0 shadow-sm">
+                <CardHeader>
+                  <CardTitle className="text-lg">Create workout</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <Input
+                    value={customWorkoutName}
+                    onChange={(e) => setCustomWorkoutName(e.target.value)}
+                    placeholder="New workout name"
+                  />
+                  <Button onClick={addWorkout} className="w-full rounded-2xl">
+                    <Plus className="mr-2 h-4 w-4" /> Add workout
+                  </Button>
+                  <p className="text-xs text-neutral-500">Use this if you want to rename or add a totally custom workout later.</p>
+                </CardContent>
+              </Card>
+
+              <Card className="rounded-3xl border-0 shadow-sm">
+                <CardHeader>
+                  <CardTitle className="text-lg">Edit selected workout exercises</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex flex-col gap-3 md:flex-row">
+                    <Input value={currentPlan.workout} readOnly placeholder="Choose a day with a workout" />
+                    <Input
+                      value={customExercise}
+                      onChange={(e) => setCustomExercise(e.target.value)}
+                      placeholder="Add exercise to selected workout"
+                    />
+                    <Button onClick={addExerciseToWorkout} className="rounded-2xl">
+                      <Plus className="mr-2 h-4 w-4" /> Add
+                    </Button>
+                  </div>
+
+                  <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                    {Object.entries(workouts).map(([name, exercises]) => (
+                      <div key={name} className="rounded-2xl border border-neutral-200 p-4">
+                        <p className="font-medium text-neutral-900">{name}</p>
+                        <div className="mt-3 space-y-2">
+                          {exercises.map((exercise, idx) => (
+                            <div key={`${name}-${idx}`} className="rounded-xl bg-neutral-50 px-3 py-2 text-sm text-neutral-700">
+                              {exercise}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="progress" className="space-y-6">
+            <div className="grid gap-6 lg:grid-cols-[380px,1fr]">
+              <Card className="rounded-3xl border-0 shadow-sm">
+                <CardHeader>
+                  <CardTitle className="text-lg">Body metrics</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <Input placeholder="Weight" value={metrics.weight} onChange={(e) => setMetrics({ ...metrics, weight: e.target.value })} />
+                    <Input placeholder="Body fat %" value={metrics.bodyFat} onChange={(e) => setMetrics({ ...metrics, bodyFat: e.target.value })} />
+                    <Input placeholder="Waist" value={metrics.waist} onChange={(e) => setMetrics({ ...metrics, waist: e.target.value })} />
+                    <Input placeholder="Hips" value={metrics.hips} onChange={(e) => setMetrics({ ...metrics, hips: e.target.value })} />
+                    <Input placeholder="Glutes" value={metrics.glutes} onChange={(e) => setMetrics({ ...metrics, glutes: e.target.value })} />
+                    <Input placeholder="Thigh" value={metrics.thigh} onChange={(e) => setMetrics({ ...metrics, thigh: e.target.value })} />
+                    <Input placeholder="Arm" value={metrics.arm} onChange={(e) => setMetrics({ ...metrics, arm: e.target.value })} />
+                  </div>
+                  <Textarea placeholder="Progress notes" value={metrics.notes} onChange={(e) => setMetrics({ ...metrics, notes: e.target.value })} />
+                  <Button onClick={saveProgressSnapshot} className="w-full rounded-2xl">
+                    <Save className="mr-2 h-4 w-4" /> Save progress entry
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <div className="space-y-6">
+                <Card className="rounded-3xl border-0 shadow-sm">
+                  <CardHeader>
+                    <CardTitle className="text-lg">Photo check-in</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <label className="flex cursor-pointer items-center justify-center rounded-2xl border border-dashed border-neutral-300 p-6 text-sm text-neutral-600 hover:bg-neutral-50">
+                      <input type="file" accept="image/*" multiple className="hidden" onChange={handlePhotoUpload} />
+                      <span className="flex items-center gap-2"><Upload className="h-4 w-4" /> Upload progress photos</span>
+                    </label>
+                    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                      {photoPreviews.map((photo) => (
+                        <div key={photo.id} className="overflow-hidden rounded-2xl border border-neutral-200 bg-white">
+                          <img src={photo.url} alt={photo.name} className="h-56 w-full object-cover" />
+                          <div className="flex items-center justify-between gap-3 p-3">
+                            <p className="truncate text-sm text-neutral-700">{photo.name}</p>
+                            <Button variant="ghost" size="icon" onClick={() => removePhoto(photo.id)}>
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="rounded-3xl border-0 shadow-sm">
+                  <CardHeader>
+                    <CardTitle className="text-lg">Saved entries</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {progressEntries.length === 0 ? (
+                      <div className="rounded-2xl border border-dashed border-neutral-300 p-8 text-sm text-neutral-500">
+                        No entries yet. Save your first check-in above.
+                      </div>
+                    ) : (
+                      progressEntries.map((entry) => (
+                        <div key={entry.id} className="rounded-2xl border border-neutral-200 p-4">
+                          <div className="flex items-start justify-between gap-3">
+                            <div>
+                              <p className="font-medium text-neutral-900">{entry.date}</p>
+                              <p className="mt-1 text-sm text-neutral-500">Weight: {entry.weight || "-"} · Body fat: {entry.bodyFat || "-"}</p>
+                            </div>
+                            <Button variant="ghost" size="icon" onClick={() => deleteProgressEntry(entry.id)}>
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          <div className="mt-3 grid grid-cols-2 gap-2 text-sm text-neutral-700 md:grid-cols-3">
+                            <Metric label="Waist" value={entry.waist} />
+                            <Metric label="Hips" value={entry.hips} />
+                            <Metric label="Glutes" value={entry.glutes} />
+                            <Metric label="Thigh" value={entry.thigh} />
+                            <Metric label="Arm" value={entry.arm} />
+                            <Metric label="Notes" value={entry.notes} />
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
+      </div>
+    </div>
+  );
 }
-</script>
 
-<!-- TEMPLATE FUNCTION -->
-<script>
-function exercise(name, link){
-  return `
-  <div class="exercise">
-    <input type="checkbox"> ${name}
-    <a href="${link}" target="_blank">▶️</a><br>
-    kg:<input type="text">
-    sets:<input type="text">
-    reps:<input type="text"><br>
-    notes:<input style="width:200px">
-  </div>
-  `;
+function StatCard({ label, value, icon }) {
+  return (
+    <div className="rounded-2xl bg-white p-4 shadow-sm">
+      <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-neutral-500">
+        {icon}
+        <span>{label}</span>
+      </div>
+      <p className="mt-2 truncate text-sm font-semibold text-neutral-900">{value}</p>
+    </div>
+  );
 }
-</script>
 
-<!-- LOWER 1 -->
-<div class="section">
-<button onclick="toggle('l1')">Lower 1 🍑</button>
-<div id="l1">
+function Metric({ label, value }) {
+  return (
+    <div className="rounded-xl bg-neutral-50 px-3 py-2">
+      <p className="text-xs uppercase tracking-wide text-neutral-500">{label}</p>
+      <p className="mt-1 break-words">{value || "-"}</p>
+    </div>
+  );
+}
 
-<h3>Mobilidade</h3>
-<script>
-document.write(exercise("Hamstring stretch","https://www.youtube.com/results?search_query=hamstring+stretch"));
-document.write(exercise("90/90 Hip","https://www.youtube.com/results?search_query=90/90+hip"));
-document.write(exercise("Banded Walk","https://www.youtube.com/results?search_query=banded+lateral+walk"));
-</script>
-
-<h3>Treino</h3>
-<script>
-document.write(exercise("Hip Thrust","https://www.youtube.com/results?search_query=hip+thrust"));
-document.write(exercise("RDL","https://www.youtube.com/results?search_query=romanian+deadlift"));
-document.write(exercise("Bulgarian","https://www.youtube.com/results?search_query=bulgarian+split+squat"));
-document.write(exercise("Kickback","https://www.youtube.com/results?search_query=cable+kickback"));
-document.write(exercise("Abduction","https://www.youtube.com/results?search_query=hip+abduction"));
-</script>
-
-</div>
-</div>
-
-<!-- UPPER 1 -->
-<div class="section">
-<button onclick="toggle('u1')">Upper 1 🧠</button>
-<div id="u1">
-
-<h3>Postural</h3>
-<script>
-document.write(exercise("Wall Slides","https://www.youtube.com/results?search_query=wall+slides"));
-document.write(exercise("Bridge Hold","https://www.youtube.com/results?search_query=glute+bridge+hold"));
-document.write(exercise("Dead Bug","https://www.youtube.com/results?search_query=dead+bug"));
-</script>
-
-<h3>Mobilidade</h3>
-<script>
-document.write(exercise("Thoracic Rotation","https://www.youtube.com/results?search_query=thoracic+rotation"));
-document.write(exercise("Chest Opener","https://www.youtube.com/results?search_query=chest+opener"));
-</script>
-
-<h3>Treino</h3>
-<script>
-document.write(exercise("Face Pull","https://www.youtube.com/results?search_query=face+pull"));
-document.write(exercise("Lateral Raise","https://www.youtube.com/results?search_query=lateral+raise"));
-document.write(exercise("Arnold Press","https://www.youtube.com/results?search_query=arnold+press"));
-document.write(exercise("Row","https://www.youtube.com/results?search_query=seated+row"));
-</script>
-
-</div>
-</div>
-
-<!-- LOWER 2 -->
-<div class="section">
-<button onclick="toggle('l2')">Lower 2 🍑</button>
-<div id="l2">
-
-<h3>Mobilidade</h3>
-<script>
-document.write(exercise("Hip Flexor","https://www.youtube.com/results?search_query=hip+flexor+stretch"));
-document.write(exercise("Hamstring","https://www.youtube.com/results?search_query=hamstring+stretch"));
-document.write(exercise("Ankle","https://www.youtube.com/results?search_query=ankle+mobility"));
-</script>
-
-<h3>Treino</h3>
-<script>
-document.write(exercise("Sumo Squat","https://www.youtube.com/results?search_query=sumo+squat"));
-document.write(exercise("Leg Press","https://www.youtube.com/results?search_query=leg+press"));
-document.write(exercise("Step Up","https://www.youtube.com/results?search_query=step+up"));
-document.write(exercise("Hip Thrust","https://www.youtube.com/results?search_query=hip+thrust"));
-document.write(exercise("Abduction","https://www.youtube.com/results?search_query=hip+abduction"));
-</script>
-
-</div>
-</div>
-
-<!-- UPPER 2 -->
-<div class="section">
-<button onclick="toggle('u2')">Upper 2 🧠</button>
-<div id="u2">
-
-<h3>Postural</h3>
-<script>
-document.write(exercise("Face Pull Light","https://www.youtube.com/results?search_query=face+pull"));
-document.write(exercise("Kickback Light","https://www.youtube.com/results?search_query=kickback"));
-document.write(exercise("Plank","https://www.youtube.com/results?search_query=plank"));
-</script>
-
-<h3>Mobilidade</h3>
-<script>
-document.write(exercise("Chest Opener","https://www.youtube.com/results?search_query=chest+opener"));
-document.write(exercise("Thoracic","https://www.youtube.com/results?search_query=thoracic+mobility"));
-document.write(exercise("Neck","https://www.youtube.com/results?search_query=neck+mobility"));
-</script>
-
-<h3>Treino</h3>
-<script>
-document.write(exercise("Lat Pulldown","https://www.youtube.com/results?search_query=lat+pulldown"));
-document.write(exercise("Row","https://www.youtube.com/results?search_query=row"));
-document.write(exercise("Chest Press","https://www.youtube.com/results?search_query=chest+press"));
-document.write(exercise("Lateral Raise","https://www.youtube.com/results?search_query=lateral+raise"));
-</script>
-
-</div>
-</div>
-
-<!-- LOWER 3 -->
-<div class="section">
-<button onclick="toggle('l3')">Lower 3 🍑</button>
-<div id="l3">
-
-<h3>Mobilidade</h3>
-<script>
-document.write(exercise("Hip Opener","https://www.youtube.com/results?search_query=hip+mobility"));
-document.write(exercise("Hamstring","https://www.youtube.com/results?search_query=hamstring+stretch"));
-</script>
-
-<h3>Treino</h3>
-<script>
-document.write(exercise("Single Hip Thrust","https://www.youtube.com/results?search_query=single+leg+hip+thrust"));
-document.write(exercise("Glute Bridge","https://www.youtube.com/results?search_query=glute+bridge"));
-document.write(exercise("Kickback","https://www.youtube.com/results?search_query=kickback"));
-document.write(exercise("Frog Pumps","https://www.youtube.com/results?search_query=frog+pumps"));
-document.write(exercise("Fire Hydrant","https://www.youtube.com/results?search_query=fire+hydrant"));
-</script>
-
-</div>
-</div>
-
-<!-- UPPER 3 -->
-<div class="section">
-<button onclick="toggle('u3')">Upper 3 🧠</button>
-<div id="u3">
-
-<h3>Postural</h3>
-<script>
-document.write(exercise("YT Raises","https://www.youtube.com/results?search_query=yt+raises"));
-document.write(exercise("Bridge March","https://www.youtube.com/results?search_query=bridge+march"));
-document.write(exercise("Brace Hold","https://www.youtube.com/results?search_query=core+brace"));
-</script>
-
-<h3>Mobilidade</h3>
-<script>
-document.write(exercise("Thoracic Extension","https://www.youtube.com/results?search_query=thoracic+extension"));
-document.write(exercise("Shoulder Mobility","https://www.youtube.com/results?search_query=shoulder+mobility"));
-</script>
-
-<h3>Treino</h3>
-<script>
-document.write(exercise("Lateral Raise","https://www.youtube.com/results?search_query=lateral+raise"));
-document.write(exercise("Front Raise","https://www.youtube.com/results?search_query=front+raise"));
-document.write(exercise("Reverse Fly","https://www.youtube.com/results?search_query=reverse+fly"));
-document.write(exercise("Face Pull","https://www.youtube.com/results?search_query=face+pull"));
-</script>
-
-</div>
-</div>
-
-</body>
-</html>
