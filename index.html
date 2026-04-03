@@ -4,28 +4,198 @@
   <title>Project by Camila</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body { font-family: Arial; padding: 20px; background: #f5f5f5; }
-    h1 { text-align: center; }
-    .card { background: white; padding: 15px; margin-bottom: 15px; border-radius: 10px; }
-    input { width: 60px; margin-right: 10px; }
+    body { font-family: Arial; background:#f5f5f5; padding:20px; }
+    h1 { text-align:center; }
+    .section { background:white; padding:15px; margin-bottom:20px; border-radius:12px; }
+    .exercise { margin-bottom:15px; }
+    input { margin:3px; }
+    button { padding:5px 10px; border:none; background:black; color:white; border-radius:5px; }
   </style>
 </head>
 <body>
 
 <h1>Project by Camila</h1>
 
-<div class="card">
-  <h2>Lower 1 🍑</h2>
+<script>
+function toggle(id){
+  let el = document.getElementById(id);
+  el.style.display = el.style.display === "none" ? "block" : "none";
+}
+</script>
 
-  <p><input type="checkbox"> Hip Thrust 
-  <a href="https://www.youtube.com/results?search_query=hip+thrust+proper+form" target="_blank">▶️</a></p>
+<!-- TEMPLATE FUNCTION -->
+<script>
+function exercise(name, link){
+  return `
+  <div class="exercise">
+    <input type="checkbox"> ${name}
+    <a href="${link}" target="_blank">▶️</a><br>
+    kg:<input type="text">
+    sets:<input type="text">
+    reps:<input type="text"><br>
+    notes:<input style="width:200px">
+  </div>
+  `;
+}
+</script>
 
-  <p><input type="checkbox"> RDL 
-  <a href="https://www.youtube.com/results?search_query=romanian+deadlift+proper+form" target="_blank">▶️</a></p>
+<!-- LOWER 1 -->
+<div class="section">
+<button onclick="toggle('l1')">Lower 1 🍑</button>
+<div id="l1">
 
-  <p><input type="checkbox"> Bulgarian 
-  <a href="https://www.youtube.com/results?search_query=bulgarian+split+squat" target="_blank">▶️</a></p>
+<h3>Mobilidade</h3>
+<script>
+document.write(exercise("Hamstring stretch","https://www.youtube.com/results?search_query=hamstring+stretch"));
+document.write(exercise("90/90 Hip","https://www.youtube.com/results?search_query=90/90+hip"));
+document.write(exercise("Banded Walk","https://www.youtube.com/results?search_query=banded+lateral+walk"));
+</script>
 
+<h3>Treino</h3>
+<script>
+document.write(exercise("Hip Thrust","https://www.youtube.com/results?search_query=hip+thrust"));
+document.write(exercise("RDL","https://www.youtube.com/results?search_query=romanian+deadlift"));
+document.write(exercise("Bulgarian","https://www.youtube.com/results?search_query=bulgarian+split+squat"));
+document.write(exercise("Kickback","https://www.youtube.com/results?search_query=cable+kickback"));
+document.write(exercise("Abduction","https://www.youtube.com/results?search_query=hip+abduction"));
+</script>
+
+</div>
+</div>
+
+<!-- UPPER 1 -->
+<div class="section">
+<button onclick="toggle('u1')">Upper 1 🧠</button>
+<div id="u1">
+
+<h3>Postural</h3>
+<script>
+document.write(exercise("Wall Slides","https://www.youtube.com/results?search_query=wall+slides"));
+document.write(exercise("Bridge Hold","https://www.youtube.com/results?search_query=glute+bridge+hold"));
+document.write(exercise("Dead Bug","https://www.youtube.com/results?search_query=dead+bug"));
+</script>
+
+<h3>Mobilidade</h3>
+<script>
+document.write(exercise("Thoracic Rotation","https://www.youtube.com/results?search_query=thoracic+rotation"));
+document.write(exercise("Chest Opener","https://www.youtube.com/results?search_query=chest+opener"));
+</script>
+
+<h3>Treino</h3>
+<script>
+document.write(exercise("Face Pull","https://www.youtube.com/results?search_query=face+pull"));
+document.write(exercise("Lateral Raise","https://www.youtube.com/results?search_query=lateral+raise"));
+document.write(exercise("Arnold Press","https://www.youtube.com/results?search_query=arnold+press"));
+document.write(exercise("Row","https://www.youtube.com/results?search_query=seated+row"));
+</script>
+
+</div>
+</div>
+
+<!-- LOWER 2 -->
+<div class="section">
+<button onclick="toggle('l2')">Lower 2 🍑</button>
+<div id="l2">
+
+<h3>Mobilidade</h3>
+<script>
+document.write(exercise("Hip Flexor","https://www.youtube.com/results?search_query=hip+flexor+stretch"));
+document.write(exercise("Hamstring","https://www.youtube.com/results?search_query=hamstring+stretch"));
+document.write(exercise("Ankle","https://www.youtube.com/results?search_query=ankle+mobility"));
+</script>
+
+<h3>Treino</h3>
+<script>
+document.write(exercise("Sumo Squat","https://www.youtube.com/results?search_query=sumo+squat"));
+document.write(exercise("Leg Press","https://www.youtube.com/results?search_query=leg+press"));
+document.write(exercise("Step Up","https://www.youtube.com/results?search_query=step+up"));
+document.write(exercise("Hip Thrust","https://www.youtube.com/results?search_query=hip+thrust"));
+document.write(exercise("Abduction","https://www.youtube.com/results?search_query=hip+abduction"));
+</script>
+
+</div>
+</div>
+
+<!-- UPPER 2 -->
+<div class="section">
+<button onclick="toggle('u2')">Upper 2 🧠</button>
+<div id="u2">
+
+<h3>Postural</h3>
+<script>
+document.write(exercise("Face Pull Light","https://www.youtube.com/results?search_query=face+pull"));
+document.write(exercise("Kickback Light","https://www.youtube.com/results?search_query=kickback"));
+document.write(exercise("Plank","https://www.youtube.com/results?search_query=plank"));
+</script>
+
+<h3>Mobilidade</h3>
+<script>
+document.write(exercise("Chest Opener","https://www.youtube.com/results?search_query=chest+opener"));
+document.write(exercise("Thoracic","https://www.youtube.com/results?search_query=thoracic+mobility"));
+document.write(exercise("Neck","https://www.youtube.com/results?search_query=neck+mobility"));
+</script>
+
+<h3>Treino</h3>
+<script>
+document.write(exercise("Lat Pulldown","https://www.youtube.com/results?search_query=lat+pulldown"));
+document.write(exercise("Row","https://www.youtube.com/results?search_query=row"));
+document.write(exercise("Chest Press","https://www.youtube.com/results?search_query=chest+press"));
+document.write(exercise("Lateral Raise","https://www.youtube.com/results?search_query=lateral+raise"));
+</script>
+
+</div>
+</div>
+
+<!-- LOWER 3 -->
+<div class="section">
+<button onclick="toggle('l3')">Lower 3 🍑</button>
+<div id="l3">
+
+<h3>Mobilidade</h3>
+<script>
+document.write(exercise("Hip Opener","https://www.youtube.com/results?search_query=hip+mobility"));
+document.write(exercise("Hamstring","https://www.youtube.com/results?search_query=hamstring+stretch"));
+</script>
+
+<h3>Treino</h3>
+<script>
+document.write(exercise("Single Hip Thrust","https://www.youtube.com/results?search_query=single+leg+hip+thrust"));
+document.write(exercise("Glute Bridge","https://www.youtube.com/results?search_query=glute+bridge"));
+document.write(exercise("Kickback","https://www.youtube.com/results?search_query=kickback"));
+document.write(exercise("Frog Pumps","https://www.youtube.com/results?search_query=frog+pumps"));
+document.write(exercise("Fire Hydrant","https://www.youtube.com/results?search_query=fire+hydrant"));
+</script>
+
+</div>
+</div>
+
+<!-- UPPER 3 -->
+<div class="section">
+<button onclick="toggle('u3')">Upper 3 🧠</button>
+<div id="u3">
+
+<h3>Postural</h3>
+<script>
+document.write(exercise("YT Raises","https://www.youtube.com/results?search_query=yt+raises"));
+document.write(exercise("Bridge March","https://www.youtube.com/results?search_query=bridge+march"));
+document.write(exercise("Brace Hold","https://www.youtube.com/results?search_query=core+brace"));
+</script>
+
+<h3>Mobilidade</h3>
+<script>
+document.write(exercise("Thoracic Extension","https://www.youtube.com/results?search_query=thoracic+extension"));
+document.write(exercise("Shoulder Mobility","https://www.youtube.com/results?search_query=shoulder+mobility"));
+</script>
+
+<h3>Treino</h3>
+<script>
+document.write(exercise("Lateral Raise","https://www.youtube.com/results?search_query=lateral+raise"));
+document.write(exercise("Front Raise","https://www.youtube.com/results?search_query=front+raise"));
+document.write(exercise("Reverse Fly","https://www.youtube.com/results?search_query=reverse+fly"));
+document.write(exercise("Face Pull","https://www.youtube.com/results?search_query=face+pull"));
+</script>
+
+</div>
 </div>
 
 </body>
