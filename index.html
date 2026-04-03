@@ -1,417 +1,410 @@
-import React, { useMemo, useState } from "react";
-import {
-  CalendarDays,
-  CheckCircle2,
-  Circle,
-  Dumbbell,
-  Plus,
-  Save,
-  Trash2,
-  Upload,
-} from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Project by Camila</title>
+  <style>
+    :root{
+      --bg:#f6f4f1;
+      --card:#ffffff;
+      --text:#161616;
+      --muted:#6f6f6f;
+      --line:#e8e3dc;
+      --accent:#111111;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+      background:var(--bg);
+      color:var(--text);
+    }
+    .wrap{
+      max-width:980px;
+      margin:0 auto;
+      padding:24px 16px 48px;
+    }
+    h1{
+      text-align:center;
+      margin:8px 0 24px;
+      font-size:34px;
+      font-weight:700;
+      letter-spacing:-0.02em;
+    }
+    .topbar{
+      display:grid;
+      grid-template-columns:repeat(6,1fr);
+      gap:10px;
+      margin-bottom:18px;
+    }
+    .tab-btn{
+      border:1px solid var(--line);
+      background:#fff;
+      padding:12px 10px;
+      border-radius:14px;
+      font-weight:600;
+      cursor:pointer;
+    }
+    .tab-btn:hover{border-color:#cfc8bf}
+    .card{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:22px;
+      padding:18px;
+      margin-bottom:18px;
+      box-shadow:0 1px 2px rgba(0,0,0,.03);
+    }
+    .card h2{
+      margin:0 0 14px;
+      font-size:24px;
+    }
+    .sub{
+      margin:18px 0 10px;
+      font-size:13px;
+      text-transform:uppercase;
+      letter-spacing:.12em;
+      color:var(--muted);
+      font-weight:700;
+    }
+    .exercise{
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:12px;
+      margin-bottom:10px;
+      background:#fff;
+    }
+    .row1{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .row1 label{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      font-weight:600;
+      flex:1;
+      min-width:220px;
+    }
+    .video{
+      text-decoration:none;
+      color:#fff;
+      background:var(--accent);
+      padding:7px 12px;
+      border-radius:999px;
+      font-size:13px;
+      font-weight:600;
+    }
+    .video:hover{opacity:.9}
+    .row2{
+      display:grid;
+      grid-template-columns:1fr;
+      gap:8px;
+      margin-top:10px;
+    }
+    input[type="text"], input[type="date"], textarea, select{
+      width:100%;
+      border:1px solid var(--line);
+      border-radius:12px;
+      padding:11px 12px;
+      font:inherit;
+      background:#fff;
+    }
+    textarea{
+      min-height:80px;
+      resize:vertical;
+    }
+    .hidden{display:none}
+    .calendar{
+      display:grid;
+      grid-template-columns:repeat(7,1fr);
+      gap:10px;
+      margin-top:10px;
+    }
+    .day{
+      border:1px solid var(--line);
+      border-radius:16px;
+      background:#fff;
+      padding:12px;
+      min-height:110px;
+    }
+    .dayname{
+      font-size:13px;
+      color:var(--muted);
+      margin-bottom:8px;
+      font-weight:700;
+    }
+    .small{
+      font-size:12px;
+      color:var(--muted);
+      margin-top:6px;
+    }
+    .save-btn{
+      border:none;
+      background:var(--accent);
+      color:#fff;
+      padding:12px 14px;
+      border-radius:14px;
+      font-weight:700;
+      cursor:pointer;
+    }
+    .save-btn:hover{opacity:.92}
+    .log-list{
+      margin-top:14px;
+      display:grid;
+      gap:10px;
+    }
+    .log-item{
+      border:1px solid var(--line);
+      border-radius:16px;
+      background:#fff;
+      padding:12px;
+    }
+    @media (max-width:900px){
+      .topbar{grid-template-columns:repeat(2,1fr)}
+      .calendar{grid-template-columns:repeat(2,1fr)}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Project by Camila</h1>
 
-const initialWorkouts = {
-  "Lower 1": [
-    "Hamstring stretch",
-    "Hip opener (90/90)",
-    "Banded lateral walk",
-    "Hip Thrust",
-    "Romanian Deadlift",
-    "Bulgarian Split Squat",
-    "Cable Kickback",
-    "Hip Abduction",
-  ],
-  "Upper 1": [
-    "Wall Slides",
-    "Glute Bridge Hold",
-    "Dead Bug",
-    "Thoracic rotation",
-    "Chest opener",
-    "Face Pull",
-    "Lateral Raise",
-    "Arnold Press",
-    "Seated Row",
-  ],
-  "Lower 2": [
-    "Hip flexor stretch",
-    "Hamstring light",
-    "Ankle mobility",
-    "Sumo Squat",
-    "Leg Press",
-    "Step-Up",
-    "Hip Thrust (light)",
-    "Abduction",
-  ],
-  "Upper 2": [
-    "Scapular pull / Face pull light",
-    "Cable Kickback light",
-    "Plank",
-    "Chest opener",
-    "Thoracic mobility",
-    "Neck mobility",
-    "Lat Pulldown",
-    "Seated Row",
-    "Chest Press",
-    "Lateral Raise",
-  ],
-  "Lower 3": [
-    "Hip opener",
-    "Hamstring stretch",
-    "Single Leg Hip Thrust",
-    "Glute Bridge",
-    "Cable Kickback",
-    "Frog Pumps",
-    "Fire Hydrant",
-  ],
-  "Upper 3": [
-    "Y-T Raises",
-    "Bridge March",
-    "Brace Hold",
-    "Thoracic extension",
-    "Shoulder mobility",
-    "Lateral Raise",
-    "Front Raise",
-    "Reverse Fly",
-    "Face Pull",
-  ],
-};
+    <div class="topbar">
+      <button class="tab-btn" onclick="showWorkout('lower1')">Lower 1</button>
+      <button class="tab-btn" onclick="showWorkout('upper1')">Upper 1</button>
+      <button class="tab-btn" onclick="showWorkout('lower2')">Lower 2</button>
+      <button class="tab-btn" onclick="showWorkout('upper2')">Upper 2</button>
+      <button class="tab-btn" onclick="showWorkout('lower3')">Lower 3</button>
+      <button class="tab-btn" onclick="showWorkout('upper3')">Upper 3</button>
+    </div>
 
-const dayNames = [
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-  "Sunday",
-];
-
-const createEmptyDayPlan = () => ({
-  workout: "",
-  checks: {},
-  logs: {},
-  notes: "",
-});
-
-const createInitialSchedule = () =>
-  dayNames.reduce((acc, day) => {
-    acc[day] = createEmptyDayPlan();
-    return acc;
-  }, {});
-
-const initialMetrics = {
-  weight: "",
-  bodyFat: "",
-  waist: "",
-  hips: "",
-  glutes: "",
-  thigh: "",
-  arm: "",
-  notes: "",
-};
-
-function makeId() {
-  if (typeof crypto !== "undefined" && crypto.randomUUID) {
-    return crypto.randomUUID();
-  }
-  return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
-}
-
-function StatCard({ label, value, icon }) {
-  return (
-    <div className="rounded-2xl bg-white p-4 shadow-sm">
-      <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-neutral-500">
-        {icon}
-        <span>{label}</span>
+    <div class="card">
+      <h2>Weekly log</h2>
+      <div style="display:grid;grid-template-columns:180px 1fr 180px;gap:10px;">
+        <input type="date" id="logDate">
+        <select id="logWorkout">
+          <option value="">Select workout</option>
+          <option>Lower 1</option>
+          <option>Upper 1</option>
+          <option>Lower 2</option>
+          <option>Upper 2</option>
+          <option>Lower 3</option>
+          <option>Upper 3</option>
+          <option>Rest day</option>
+          <option>Missed</option>
+        </select>
+        <button class="save-btn" onclick="addLog()">Add day</button>
       </div>
-      <p className="mt-2 truncate text-sm font-semibold text-neutral-900">{value}</p>
+      <div class="small">Use this to note what you actually did on each date.</div>
+      <div id="logList" class="log-list"></div>
     </div>
-  );
-}
 
-function Metric({ label, value }) {
-  return (
-    <div className="rounded-xl bg-neutral-50 px-3 py-2">
-      <p className="text-xs uppercase tracking-wide text-neutral-500">{label}</p>
-      <p className="mt-1 break-words">{value || "-"}</p>
+    <div id="lower1" class="card workout-section">
+      <h2>Lower 1 🍑</h2>
+
+      <div class="sub">Mobility</div>
+      <div id="l1-mobility"></div>
+
+      <div class="sub">Training</div>
+      <div id="l1-training"></div>
     </div>
-  );
-}
 
-export default function WorkoutTrackerApp() {
-  const [schedule, setSchedule] = useState(createInitialSchedule);
-  const [selectedDay, setSelectedDay] = useState("Monday");
-  const [customWorkoutName, setCustomWorkoutName] = useState("");
-  const [customExercise, setCustomExercise] = useState("");
-  const [workouts, setWorkouts] = useState(initialWorkouts);
-  const [metrics, setMetrics] = useState(initialMetrics);
-  const [progressEntries, setProgressEntries] = useState([]);
-  const [photoPreviews, setPhotoPreviews] = useState([]);
+    <div id="upper1" class="card workout-section hidden">
+      <h2>Upper 1 🧠</h2>
 
-  const currentPlan = schedule[selectedDay];
+      <div class="sub">Postural</div>
+      <div id="u1-postural"></div>
 
-  const currentExercises = useMemo(() => {
-    if (!currentPlan?.workout) return [];
-    return workouts[currentPlan.workout] || [];
-  }, [currentPlan?.workout, workouts]);
+      <div class="sub">Mobility</div>
+      <div id="u1-mobility"></div>
 
-  function updateSelectedDay(updater) {
-    setSchedule((prev) => ({
-      ...prev,
-      [selectedDay]: updater(prev[selectedDay]),
-    }));
-  }
+      <div class="sub">Training</div>
+      <div id="u1-training"></div>
+    </div>
 
-  function assignWorkoutToDay(workoutName) {
-    setSchedule((prev) => ({
-      ...prev,
-      [selectedDay]: {
-        ...createEmptyDayPlan(),
-        workout: workoutName,
-      },
-    }));
-  }
+    <div id="lower2" class="card workout-section hidden">
+      <h2>Lower 2 🍑</h2>
 
-  function toggleCheck(exercise) {
-    updateSelectedDay((day) => ({
-      ...day,
-      checks: {
-        ...day.checks,
-        [exercise]: !day.checks[exercise],
-      },
-    }));
-  }
+      <div class="sub">Mobility</div>
+      <div id="l2-mobility"></div>
 
-  function updateLog(exercise, field, value) {
-    updateSelectedDay((day) => ({
-      ...day,
-      logs: {
-        ...day.logs,
-        [exercise]: {
-          ...(day.logs[exercise] || { quickLog: "", notes: "" }),
-          [field]: value,
-        },
-      },
-    }));
-  }
+      <div class="sub">Training</div>
+      <div id="l2-training"></div>
+    </div>
 
-  function addWorkout() {
-    const name = customWorkoutName.trim();
-    if (!name || workouts[name]) return;
+    <div id="upper2" class="card workout-section hidden">
+      <h2>Upper 2 🧠</h2>
 
-    setWorkouts((prev) => ({
-      ...prev,
-      [name]: [],
-    }));
-    setCustomWorkoutName("");
-  }
+      <div class="sub">Postural</div>
+      <div id="u2-postural"></div>
 
-  function addExerciseToWorkout() {
-    const workoutName = currentPlan?.workout;
-    const exercise = customExercise.trim();
+      <div class="sub">Mobility</div>
+      <div id="u2-mobility"></div>
 
-    if (!workoutName || !exercise) return;
+      <div class="sub">Training</div>
+      <div id="u2-training"></div>
+    </div>
 
-    setWorkouts((prev) => ({
-      ...prev,
-      [workoutName]: [...(prev[workoutName] || []), exercise],
-    }));
-    setCustomExercise("");
-  }
+    <div id="lower3" class="card workout-section hidden">
+      <h2>Lower 3 🍑</h2>
 
-  function saveProgressSnapshot() {
-    const today = new Date().toLocaleDateString();
+      <div class="sub">Mobility</div>
+      <div id="l3-mobility"></div>
 
-    setProgressEntries((prev) => [
-      {
-        id: makeId(),
-        date: today,
-        ...metrics,
-      },
-      ...prev,
-    ]);
-  }
+      <div class="sub">Training</div>
+      <div id="l3-training"></div>
+    </div>
 
-  function deleteProgressEntry(id) {
-    setProgressEntries((prev) => prev.filter((entry) => entry.id !== id));
-  }
+    <div id="upper3" class="card workout-section hidden">
+      <h2>Upper 3 🧠</h2>
 
-  function handlePhotoUpload(event) {
-    const files = Array.from(event.target.files || []);
+      <div class="sub">Postural</div>
+      <div id="u3-postural"></div>
 
-    const newPhotos = files.map((file) => ({
-      id: makeId(),
-      name: file.name,
-      url: URL.createObjectURL(file),
-    }));
+      <div class="sub">Mobility</div>
+      <div id="u3-mobility"></div>
 
-    setPhotoPreviews((prev) => [...newPhotos, ...prev]);
-    event.target.value = "";
-  }
+      <div class="sub">Training</div>
+      <div id="u3-training"></div>
+    </div>
+  </div>
 
-  function removePhoto(id) {
-    setPhotoPreviews((prev) => prev.filter((photo) => photo.id !== id));
-  }
+  <script>
+    function showWorkout(id){
+      document.querySelectorAll('.workout-section').forEach(el => el.classList.add('hidden'));
+      document.getElementById(id).classList.remove('hidden');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
 
-  const completionCount = currentExercises.filter(
-    (exercise) => currentPlan?.checks?.[exercise]
-  ).length;
-
-  return (
-    <div className="min-h-screen bg-neutral-50 p-4 md:p-8">
-      <div className="mx-auto max-w-7xl space-y-6">
-        <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-          <div>
-            <p className="text-sm uppercase tracking-[0.25em] text-neutral-500">
-              Personal training dashboard
-            </p>
-            <h1 className="mt-2 text-3xl font-semibold text-neutral-900">
-              Workout tracker
-            </h1>
-            <p className="mt-2 max-w-2xl text-sm text-neutral-600">
-              Organize your weekly split, tick off exercises, and keep simple logs and progress entries in one place.
-            </p>
+    function exerciseHTML(name, video){
+      return `
+        <div class="exercise">
+          <div class="row1">
+            <label>
+              <input type="checkbox">
+              <span>${name}</span>
+            </label>
+            <a class="video" href="${video}" target="_blank">Video</a>
           </div>
-
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
-            <StatCard
-              label="Selected day"
-              value={selectedDay}
-              icon={<CalendarDays className="h-4 w-4" />}
-            />
-            <StatCard
-              label="Workout"
-              value={currentPlan?.workout || "None"}
-              icon={<Dumbbell className="h-4 w-4" />}
-            />
-            <StatCard
-              label="Completed"
-              value={`${completionCount}/${currentExercises.length || 0}`}
-              icon={<CheckCircle2 className="h-4 w-4" />}
-            />
+          <div class="row2">
+            <input type="text" placeholder="kg / sets / reps">
+            <input type="text" placeholder="Notes">
           </div>
         </div>
+      `;
+    }
 
-        <Tabs defaultValue="planner" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 rounded-2xl bg-white p-1 shadow-sm">
-            <TabsTrigger value="planner" className="rounded-xl">
-              Planner
-            </TabsTrigger>
-            <TabsTrigger value="workouts" className="rounded-xl">
-              Workouts
-            </TabsTrigger>
-            <TabsTrigger value="progress" className="rounded-xl">
-              Progress
-            </TabsTrigger>
-          </TabsList>
+    const data = {
+      "l1-mobility": [
+        ["Hamstring stretch","https://www.youtube.com/results?search_query=hamstring+stretch"],
+        ["90/90 hip mobility","https://www.youtube.com/results?search_query=90%2F90+hip+mobility"],
+        ["Banded lateral walk","https://www.youtube.com/results?search_query=banded+lateral+walk"]
+      ],
+      "l1-training": [
+        ["Hip Thrust","https://www.youtube.com/results?search_query=hip+thrust+proper+form"],
+        ["Romanian Deadlift","https://www.youtube.com/results?search_query=romanian+deadlift+proper+form"],
+        ["Bulgarian Split Squat","https://www.youtube.com/results?search_query=bulgarian+split+squat+proper+form"],
+        ["Cable Kickback","https://www.youtube.com/results?search_query=cable+kickback+proper+form"],
+        ["Hip Abduction","https://www.youtube.com/results?search_query=hip+abduction+machine+proper+form"]
+      ],
 
-          <TabsContent value="planner" className="space-y-6">
-            <div className="grid gap-6 lg:grid-cols-[320px,1fr]">
-              <Card className="rounded-3xl border-0 shadow-sm">
-                <CardHeader>
-                  <CardTitle className="text-lg">Weekly calendar</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {dayNames.map((day) => (
-                    <button
-                      key={day}
-                      onClick={() => setSelectedDay(day)}
-                      className={
-                        `w-full rounded-2xl border px-4 py-3 text-left transition ${
-                          selectedDay === day
-                            ? "border-neutral-900 bg-neutral-900 text-white"
-                            : "border-neutral-200 bg-white hover:border-neutral-400"
-                        }`
-                      }
-                    >
-                      <div className="flex items-center justify-between gap-3">
-                        <div>
-                          <p className="font-medium">{day}</p>
-                          <p
-                            className={
-                              `text-xs ${
-                                selectedDay === day
-                                  ? "text-neutral-300"
-                                  : "text-neutral-500"
-                              }`
-                            }
-                          >
-                            {schedule[day].workout || "No workout selected"}
-                          </p>
-                        </div>
+      "u1-postural": [
+        ["Wall Slides","https://www.youtube.com/results?search_query=wall+slides+exercise"],
+        ["Glute Bridge Hold","https://www.youtube.com/results?search_query=glute+bridge+hold"],
+        ["Dead Bug","https://www.youtube.com/results?search_query=dead+bug+exercise"]
+      ],
+      "u1-mobility": [
+        ["Thoracic rotation","https://www.youtube.com/results?search_query=thoracic+rotation+mobility"],
+        ["Chest opener","https://www.youtube.com/results?search_query=chest+opener+stretch"]
+      ],
+      "u1-training": [
+        ["Face Pull","https://www.youtube.com/results?search_query=face+pull+proper+form"],
+        ["Lateral Raise","https://www.youtube.com/results?search_query=lateral+raise+proper+form"],
+        ["Arnold Press","https://www.youtube.com/results?search_query=arnold+press+proper+form"],
+        ["Seated Row","https://www.youtube.com/results?search_query=seated+row+proper+form"]
+      ],
 
-                        {schedule[day].workout ? (
-                          <Badge variant="secondary" className="rounded-full">
-                            Assigned
-                          </Badge>
-                        ) : null}
-                      </div>
-                    </button>
-                  ))}
-                </CardContent>
-              </Card>
+      "l2-mobility": [
+        ["Hip flexor stretch","https://www.youtube.com/results?search_query=hip+flexor+stretch"],
+        ["Hamstring stretch","https://www.youtube.com/results?search_query=hamstring+stretch"],
+        ["Ankle mobility","https://www.youtube.com/results?search_query=ankle+mobility"]
+      ],
+      "l2-training": [
+        ["Sumo Squat","https://www.youtube.com/results?search_query=sumo+squat+proper+form"],
+        ["Leg Press","https://www.youtube.com/results?search_query=leg+press+proper+form"],
+        ["Step-Up","https://www.youtube.com/results?search_query=step+up+proper+form"],
+        ["Hip Thrust (light)","https://www.youtube.com/results?search_query=hip+thrust+proper+form"],
+        ["Abduction","https://www.youtube.com/results?search_query=hip+abduction+machine+proper+form"]
+      ],
 
-              <div className="space-y-6">
-                <Card className="rounded-3xl border-0 shadow-sm">
-                  <CardHeader>
-                    <CardTitle className="text-lg">
-                      Assign workout to {selectedDay}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="grid gap-3 md:grid-cols-3">
-                    {Object.keys(workouts).map((workoutName) => (
-                      <button
-                        key={workoutName}
-                        onClick={() => assignWorkoutToDay(workoutName)}
-                        className={
-                          `rounded-2xl border p-4 text-left transition ${
-                            currentPlan?.workout === workoutName
-                              ? "border-neutral-900 bg-neutral-900 text-white"
-                              : "border-neutral-200 bg-white hover:border-neutral-400"
-                          }`
-                        }
-                      >
-                        <p className="font-medium">{workoutName}</p>
-                        <p
-                          className={
-                            `mt-1 text-xs ${
-                              currentPlan?.workout === workoutName
-                                ? "text-neutral-300"
-                                : "text-neutral-500"
-                            }`
-                          }
-                        >
-                          {workouts[workoutName].length} exercises
-                        </p>
-                      </button>
-                    ))}
-                  </CardContent>
-                </Card>
+      "u2-postural": [
+        ["Face Pull light","https://www.youtube.com/results?search_query=face+pull+proper+form"],
+        ["Kickback light","https://www.youtube.com/results?search_query=glute+kickback+exercise"],
+        ["Plank","https://www.youtube.com/results?search_query=plank+proper+form"]
+      ],
+      "u2-mobility": [
+        ["Chest opener","https://www.youtube.com/results?search_query=chest+opener+stretch"],
+        ["Thoracic mobility","https://www.youtube.com/results?search_query=thoracic+mobility"],
+        ["Neck mobility","https://www.youtube.com/results?search_query=neck+mobility+exercise"]
+      ],
+      "u2-training": [
+        ["Lat Pulldown","https://www.youtube.com/results?search_query=lat+pulldown+proper+form"],
+        ["Seated Row","https://www.youtube.com/results?search_query=seated+row+proper+form"],
+        ["Chest Press","https://www.youtube.com/results?search_query=chest+press+proper+form"],
+        ["Lateral Raise","https://www.youtube.com/results?search_query=lateral+raise+proper+form"]
+      ],
 
-                <Card className="rounded-3xl border-0 shadow-sm">
-                  <CardHeader>
-                    <CardTitle className="text-lg">
-                      Checklist and training log
-                    </CardTitle>
-                  </CardHeader>
+      "l3-mobility": [
+        ["Hip opener","https://www.youtube.com/results?search_query=hip+opener+mobility"],
+        ["Hamstring stretch","https://www.youtube.com/results?search_query=hamstring+stretch"]
+      ],
+      "l3-training": [
+        ["Single Leg Hip Thrust","https://www.youtube.com/results?search_query=single+leg+hip+thrust+proper+form"],
+        ["Glute Bridge","https://www.youtube.com/results?search_query=glute+bridge+proper+form"],
+        ["Cable Kickback","https://www.youtube.com/results?search_query=cable+kickback+proper+form"],
+        ["Frog Pumps","https://www.youtube.com/results?search_query=frog+pumps+exercise"],
+        ["Fire Hydrant","https://www.youtube.com/results?search_query=fire+hydrant+exercise"]
+      ],
 
-                  <CardContent className="space-y-4">
-                    {!currentPlan?.workout ? (
-                      <div className="rounded-2xl border border-dashed border-neutral-300 p-8 text-sm text-neutral-500">
-                        Pick a workout for this day to start checking off exercises.
-                      </div>
-                    ) : (
-                      currentExercises.map((exercise) => {
-                        const done = !!currentPlan?.checks?.[exercise];
-                        const log = currentPlan?.logs?.[exercise] || {
-                          quickLog: "",
-                          notes: "",
-                        };
+      "u3-postural": [
+        ["Y-T Raises","https://www.youtube.com/results?search_query=y+t+raises+exercise"],
+        ["Bridge March","https://www.youtube.com/results?search_query=bridge+march+exercise"],
+        ["Brace Hold","https://www.youtube.com/results?search_query=brace+hold+core"]
+      ],
+      "u3-mobility": [
+        ["Thoracic extension","https://www.youtube.com/results?search_query=thoracic+extension+mobility"],
+        ["Shoulder mobility","https://www.youtube.com/results?search_query=shoulder+mobility+exercise"]
+      ],
+      "u3-training": [
+        ["Lateral Raise","https://www.youtube.com/results?search_query=lateral+raise+proper+form"],
+        ["Front Raise","https://www.youtube.com/results?search_query=front+raise+proper+form"],
+        ["Reverse Fly","https://www.youtube.com/results?search_query=reverse+fly+proper+form"],
+        ["Face Pull","https://www.youtube.com/results?search_query=face+pull+proper+form"]
+      ]
+    };
 
-                        return (              
+    Object.keys(data).forEach(id => {
+      const container = document.getElementById(id);
+      container.innerHTML = data[id].map(item => exerciseHTML(item[0], item[1])).join('');
+    });
+
+    function addLog(){
+      const date = document.getElementById('logDate').value;
+      const workout = document.getElementById('logWorkout').value;
+      if(!date || !workout) return;
+
+      const list = document.getElementById('logList');
+      const div = document.createElement('div');
+      div.className = 'log-item';
+      div.innerHTML = `<strong>${date}</strong><div class="small">${workout}</div>`;
+      list.prepend(div);
+
+      document.getElementById('logDate').value = '';
+      document.getElementById('logWorkout').value = '';
+    }
+  </script>
+</body>
+</html>
