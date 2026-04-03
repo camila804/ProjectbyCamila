@@ -123,6 +123,27 @@ function makeId() {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
+function StatCard({ label, value, icon }) {
+  return (
+    <div className="rounded-2xl bg-white p-4 shadow-sm">
+      <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-neutral-500">
+        {icon}
+        <span>{label}</span>
+      </div>
+      <p className="mt-2 truncate text-sm font-semibold text-neutral-900">{value}</p>
+    </div>
+  );
+}
+
+function Metric({ label, value }) {
+  return (
+    <div className="rounded-xl bg-neutral-50 px-3 py-2">
+      <p className="text-xs uppercase tracking-wide text-neutral-500">{label}</p>
+      <p className="mt-1 break-words">{value || "-"}</p>
+    </div>
+  );
+}
+
 export default function WorkoutTrackerApp() {
   const [schedule, setSchedule] = useState(createInitialSchedule);
   const [selectedDay, setSelectedDay] = useState("Monday");
@@ -254,8 +275,7 @@ export default function WorkoutTrackerApp() {
               Workout tracker
             </h1>
             <p className="mt-2 max-w-2xl text-sm text-neutral-600">
-              Organize your weekly split, tick off exercises, and keep simple
-              logs and progress entries in one place.
+              Organize your weekly split, tick off exercises, and keep simple logs and progress entries in one place.
             </p>
           </div>
 
@@ -302,31 +322,32 @@ export default function WorkoutTrackerApp() {
                     <button
                       key={day}
                       onClick={() => setSelectedDay(day)}
-                      className={`w-full rounded-2xl border px-4 py-3 text-left transition ${
-                        selectedDay === day
-                          ? "border-neutral-900 bg-neutral-900 text-white"
-                          : "border-neutral-200 bg-white hover:border-neutral-400"
-                      }`}
+                      className={
+                        `w-full rounded-2xl border px-4 py-3 text-left transition ${
+                          selectedDay === day
+                            ? "border-neutral-900 bg-neutral-900 text-white"
+                            : "border-neutral-200 bg-white hover:border-neutral-400"
+                        }`
+                      }
                     >
                       <div className="flex items-center justify-between gap-3">
                         <div>
                           <p className="font-medium">{day}</p>
                           <p
-                            className={`text-xs ${
-                              selectedDay === day
-                                ? "text-neutral-300"
-                                : "text-neutral-500"
-                            }`}
+                            className={
+                              `text-xs ${
+                                selectedDay === day
+                                  ? "text-neutral-300"
+                                  : "text-neutral-500"
+                              }`
+                            }
                           >
                             {schedule[day].workout || "No workout selected"}
                           </p>
                         </div>
 
                         {schedule[day].workout ? (
-                          <Badge
-                            variant="secondary"
-                            className="rounded-full"
-                          >
+                          <Badge variant="secondary" className="rounded-full">
                             Assigned
                           </Badge>
                         ) : null}
@@ -348,19 +369,23 @@ export default function WorkoutTrackerApp() {
                       <button
                         key={workoutName}
                         onClick={() => assignWorkoutToDay(workoutName)}
-                        className={`rounded-2xl border p-4 text-left transition ${
-                          currentPlan?.workout === workoutName
-                            ? "border-neutral-900 bg-neutral-900 text-white"
-                            : "border-neutral-200 bg-white hover:border-neutral-400"
-                        }`}
+                        className={
+                          `rounded-2xl border p-4 text-left transition ${
+                            currentPlan?.workout === workoutName
+                              ? "border-neutral-900 bg-neutral-900 text-white"
+                              : "border-neutral-200 bg-white hover:border-neutral-400"
+                          }`
+                        }
                       >
                         <p className="font-medium">{workoutName}</p>
                         <p
-                          className={`mt-1 text-xs ${
-                            currentPlan?.workout === workoutName
-                              ? "text-neutral-300"
-                              : "text-neutral-500"
-                          }`}
+                          className={
+                            `mt-1 text-xs ${
+                              currentPlan?.workout === workoutName
+                                ? "text-neutral-300"
+                                : "text-neutral-500"
+                            }`
+                          }
                         >
                           {workouts[workoutName].length} exercises
                         </p>
@@ -379,8 +404,7 @@ export default function WorkoutTrackerApp() {
                   <CardContent className="space-y-4">
                     {!currentPlan?.workout ? (
                       <div className="rounded-2xl border border-dashed border-neutral-300 p-8 text-sm text-neutral-500">
-                        Pick a workout for this day to start checking off
-                        exercises.
+                        Pick a workout for this day to start checking off exercises.
                       </div>
                     ) : (
                       currentExercises.map((exercise) => {
@@ -390,364 +414,4 @@ export default function WorkoutTrackerApp() {
                           notes: "",
                         };
 
-                        return (
-                          <div
-                            key={exercise}
-                            className="rounded-2xl border border-neutral-200 p-4"
-                          >
-                            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                              <button
-                                onClick={() => toggleCheck(exercise)}
-                                className="flex items-center gap-3 text-left"
-                              >
-                                {done ? (
-                                  <CheckCircle2 className="h-5 w-5 shrink-0" />
-                                ) : (
-                                  <Circle className="h-5 w-5 shrink-0" />
-                                )}
-
-                                <p
-                                  className={`font-medium ${
-                                    done
-                                      ? "line-through text-neutral-400"
-                                      : "text-neutral-900"
-                                  }`}
-                                >
-                                  {exercise}
-                                </p>
-                              </button>
-
-                              <div className="flex items-center gap-2">
-                                <Input
-                                  placeholder="kg / sets / reps"
-                                  value={log.quickLog}
-                                  onChange={(e) =>
-                                    updateLog(
-                                      exercise,
-                                      "quickLog",
-                                      e.target.value
-                                    )
-                                  }
-                                  className="w-full md:w-[180px]"
-                                />
-                                <Badge className="rounded-full bg-neutral-100 text-neutral-700 hover:bg-neutral-100">
-                                  {currentPlan.workout}
-                                </Badge>
-                              </div>
-                            </div>
-
-                            <div className="mt-3">
-                              <Textarea
-                                placeholder="Notes"
-                                value={log.notes}
-                                onChange={(e) =>
-                                  updateLog(exercise, "notes", e.target.value)
-                                }
-                                className="min-h-[84px]"
-                              />
-                            </div>
-                          </div>
-                        );
-                      })
-                    )}
-
-                    <div className="space-y-2 pt-2">
-                      <p className="text-sm font-medium text-neutral-800">
-                        Day notes
-                      </p>
-                      <Textarea
-                        placeholder="How did today feel? Pain, PRs, adjustments, cardio notes..."
-                        value={currentPlan?.notes || ""}
-                        onChange={(e) =>
-                          updateSelectedDay((day) => ({
-                            ...day,
-                            notes: e.target.value,
-                          }))
-                        }
-                        className="min-h-[110px]"
-                      />
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="workouts" className="space-y-6">
-            <div className="grid gap-6 lg:grid-cols-[340px,1fr]">
-              <Card className="rounded-3xl border-0 shadow-sm">
-                <CardHeader>
-                  <CardTitle className="text-lg">Create workout</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <Input
-                    value={customWorkoutName}
-                    onChange={(e) => setCustomWorkoutName(e.target.value)}
-                    placeholder="New workout name"
-                  />
-                  <Button onClick={addWorkout} className="w-full rounded-2xl">
-                    <Plus className="mr-2 h-4 w-4" /> Add workout
-                  </Button>
-                  <p className="text-xs text-neutral-500">
-                    Use this if you want to add a custom workout later.
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card className="rounded-3xl border-0 shadow-sm">
-                <CardHeader>
-                  <CardTitle className="text-lg">
-                    Edit selected workout exercises
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex flex-col gap-3 md:flex-row">
-                    <Input
-                      value={currentPlan?.workout || ""}
-                      readOnly
-                      placeholder="Choose a day with a workout"
-                    />
-                    <Input
-                      value={customExercise}
-                      onChange={(e) => setCustomExercise(e.target.value)}
-                      placeholder="Add exercise to selected workout"
-                    />
-                    <Button
-                      onClick={addExerciseToWorkout}
-                      className="rounded-2xl"
-                    >
-                      <Plus className="mr-2 h-4 w-4" /> Add
-                    </Button>
-                  </div>
-
-                  <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-                    {Object.entries(workouts).map(([name, exercises]) => (
-                      <div
-                        key={name}
-                        className="rounded-2xl border border-neutral-200 p-4"
-                      >
-                        <p className="font-medium text-neutral-900">{name}</p>
-                        <div className="mt-3 space-y-2">
-                          {exercises.map((exercise, idx) => (
-                            <div
-                              key={`${name}-${idx}`}
-                              className="rounded-xl bg-neutral-50 px-3 py-2 text-sm text-neutral-700"
-                            >
-                              {exercise}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="progress" className="space-y-6">
-            <div className="grid gap-6 lg:grid-cols-[380px,1fr]">
-              <Card className="rounded-3xl border-0 shadow-sm">
-                <CardHeader>
-                  <CardTitle className="text-lg">Body metrics</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="grid grid-cols-2 gap-3">
-                    <Input
-                      placeholder="Weight"
-                      value={metrics.weight}
-                      onChange={(e) =>
-                        setMetrics({ ...metrics, weight: e.target.value })
-                      }
-                    />
-                    <Input
-                      placeholder="Body fat %"
-                      value={metrics.bodyFat}
-                      onChange={(e) =>
-                        setMetrics({ ...metrics, bodyFat: e.target.value })
-                      }
-                    />
-                    <Input
-                      placeholder="Waist"
-                      value={metrics.waist}
-                      onChange={(e) =>
-                        setMetrics({ ...metrics, waist: e.target.value })
-                      }
-                    />
-                    <Input
-                      placeholder="Hips"
-                      value={metrics.hips}
-                      onChange={(e) =>
-                        setMetrics({ ...metrics, hips: e.target.value })
-                      }
-                    />
-                    <Input
-                      placeholder="Glutes"
-                      value={metrics.glutes}
-                      onChange={(e) =>
-                        setMetrics({ ...metrics, glutes: e.target.value })
-                      }
-                    />
-                    <Input
-                      placeholder="Thigh"
-                      value={metrics.thigh}
-                      onChange={(e) =>
-                        setMetrics({ ...metrics, thigh: e.target.value })
-                      }
-                    />
-                    <Input
-                      placeholder="Arm"
-                      value={metrics.arm}
-                      onChange={(e) =>
-                        setMetrics({ ...metrics, arm: e.target.value })
-                      }
-                    />
-                  </div>
-
-                  <Textarea
-                    placeholder="Progress notes"
-                    value={metrics.notes}
-                    onChange={(e) =>
-                      setMetrics({ ...metrics, notes: e.target.value })
-                    }
-                  />
-
-                  <Button
-                    onClick={saveProgressSnapshot}
-                    className="w-full rounded-2xl"
-                  >
-                    <Save className="mr-2 h-4 w-4" /> Save progress entry
-                  </Button>
-                </CardContent>
-              </Card>
-
-              <div className="space-y-6">
-                <Card className="rounded-3xl border-0 shadow-sm">
-                  <CardHeader>
-                    <CardTitle className="text-lg">Photo check-in</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <label className="flex cursor-pointer items-center justify-center rounded-2xl border border-dashed border-neutral-300 p-6 text-sm text-neutral-600 hover:bg-neutral-50">
-                      <input
-                        type="file"
-                        accept="image/*"
-                        multiple
-                        className="hidden"
-                        onChange={handlePhotoUpload}
-                      />
-                      <span className="flex items-center gap-2">
-                        <Upload className="h-4 w-4" />
-                        Upload progress photos
-                      </span>
-                    </label>
-
-                    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                      {photoPreviews.map((photo) => (
-                        <div
-                          key={photo.id}
-                          className="overflow-hidden rounded-2xl border border-neutral-200 bg-white"
-                        >
-                          <img
-                            src={photo.url}
-                            alt={photo.name}
-                            className="h-56 w-full object-cover"
-                          />
-                          <div className="flex items-center justify-between gap-3 p-3">
-                            <p className="truncate text-sm text-neutral-700">
-                              {photo.name}
-                            </p>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => removePhoto(photo.id)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="rounded-3xl border-0 shadow-sm">
-                  <CardHeader>
-                    <CardTitle className="text-lg">Saved entries</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    {progressEntries.length === 0 ? (
-                      <div className="rounded-2xl border border-dashed border-neutral-300 p-8 text-sm text-neutral-500">
-                        No entries yet. Save your first check-in above.
-                      </div>
-                    ) : (
-                      progressEntries.map((entry) => (
-                        <div
-                          key={entry.id}
-                          className="rounded-2xl border border-neutral-200 p-4"
-                        >
-                          <div className="flex items-start justify-between gap-3">
-                            <div>
-                              <p className="font-medium text-neutral-900">
-                                {entry.date}
-                              </p>
-                              <p className="mt-1 text-sm text-neutral-500">
-                                Weight: {entry.weight || "-"} · Body fat:{" "}
-                                {entry.bodyFat || "-"}
-                              </p>
-                            </div>
-
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => deleteProgressEntry(entry.id)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-
-                          <div className="mt-3 grid grid-cols-2 gap-2 text-sm text-neutral-700 md:grid-cols-3">
-                            <Metric label="Waist" value={entry.waist} />
-                            <Metric label="Hips" value={entry.hips} />
-                            <Metric label="Glutes" value={entry.glutes} />
-                            <Metric label="Thigh" value={entry.thigh} />
-                            <Metric label="Arm" value={entry.arm} />
-                            <Metric label="Notes" value={entry.notes} />
-                          </div>
-                        </div>
-                      ))
-                    )}
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
-          </TabsContent>
-        </Tabs>
-      </div>
-    </div>
-  );
-}
-
-function StatCard({ label, value, icon }) {
-  return (
-    <div className="rounded-2xl bg-white p-4 shadow-sm">
-      <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-neutral-500">
-        {icon}
-        <span>{label}</span>
-      </div>
-      <p className="mt-2 truncate text-sm font-semibold text-neutral-900">
-        {value}
-      </p>
-    </div>
-  );
-}
-
-function Metric({ label, value }) {
-  return (
-    <div className="rounded-xl bg-neutral-50 px-3 py-2">
-      <p className="text-xs uppercase tracking-wide text-neutral-500">
-        {label}
-      </p>
-      <p className="mt-1 break-words">{value || "-"}</p>
-    </div>
-  );
-}
+                        return (              
