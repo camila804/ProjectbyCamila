@@ -1,5 +1,14 @@
 import React, { useMemo, useState } from "react";
-import { CalendarDays, CheckCircle2, Circle, Dumbbell, NotebookPen, Plus, Save, Trash2, Upload, UserRound } from "lucide-react";
+import {
+  CalendarDays,
+  CheckCircle2,
+  Circle,
+  Dumbbell,
+  Plus,
+  Save,
+  Trash2,
+  Upload,
+} from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -73,19 +82,28 @@ const initialWorkouts = {
   ],
 };
 
-const dayNames = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+const dayNames = [
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+  "Sunday",
+];
 
-const emptyDayPlan = () => ({
+const createEmptyDayPlan = () => ({
   workout: "",
   checks: {},
   logs: {},
   notes: "",
 });
 
-const initialSchedule = dayNames.reduce((acc, day) => {
-  acc[day] = emptyDayPlan();
-  return acc;
-}, {});
+const createInitialSchedule = () =>
+  dayNames.reduce((acc, day) => {
+    acc[day] = createEmptyDayPlan();
+    return acc;
+  }, {});
 
 const initialMetrics = {
   weight: "",
@@ -98,8 +116,15 @@ const initialMetrics = {
   notes: "",
 };
 
+function makeId() {
+  if (typeof crypto !== "undefined" && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+}
+
 export default function WorkoutTrackerApp() {
-  const [schedule, setSchedule] = useState(initialSchedule);
+  const [schedule, setSchedule] = useState(createInitialSchedule);
   const [selectedDay, setSelectedDay] = useState("Monday");
   const [customWorkoutName, setCustomWorkoutName] = useState("");
   const [customExercise, setCustomExercise] = useState("");
@@ -109,10 +134,11 @@ export default function WorkoutTrackerApp() {
   const [photoPreviews, setPhotoPreviews] = useState([]);
 
   const currentPlan = schedule[selectedDay];
+
   const currentExercises = useMemo(() => {
-    if (!currentPlan.workout) return [];
+    if (!currentPlan?.workout) return [];
     return workouts[currentPlan.workout] || [];
-  }, [currentPlan.workout, workouts]);
+  }, [currentPlan?.workout, workouts]);
 
   function updateSelectedDay(updater) {
     setSchedule((prev) => ({
@@ -125,7 +151,7 @@ export default function WorkoutTrackerApp() {
     setSchedule((prev) => ({
       ...prev,
       [selectedDay]: {
-        ...emptyDayPlan(),
+        ...createEmptyDayPlan(),
         workout: workoutName,
       },
     }));
@@ -147,7 +173,7 @@ export default function WorkoutTrackerApp() {
       logs: {
         ...day.logs,
         [exercise]: {
-          ...(day.logs[exercise] || { weight: "", reps: "", notes: "" }),
+          ...(day.logs[exercise] || { quickLog: "", notes: "" }),
           [field]: value,
         },
       },
@@ -157,14 +183,20 @@ export default function WorkoutTrackerApp() {
   function addWorkout() {
     const name = customWorkoutName.trim();
     if (!name || workouts[name]) return;
-    setWorkouts((prev) => ({ ...prev, [name]: [] }));
+
+    setWorkouts((prev) => ({
+      ...prev,
+      [name]: [],
+    }));
     setCustomWorkoutName("");
   }
 
   function addExerciseToWorkout() {
-    const workoutName = currentPlan.workout;
+    const workoutName = currentPlan?.workout;
     const exercise = customExercise.trim();
+
     if (!workoutName || !exercise) return;
+
     setWorkouts((prev) => ({
       ...prev,
       [workoutName]: [...(prev[workoutName] || []), exercise],
@@ -174,9 +206,10 @@ export default function WorkoutTrackerApp() {
 
   function saveProgressSnapshot() {
     const today = new Date().toLocaleDateString();
+
     setProgressEntries((prev) => [
       {
-        id: crypto.randomUUID(),
+        id: makeId(),
         date: today,
         ...metrics,
       },
@@ -190,43 +223,72 @@ export default function WorkoutTrackerApp() {
 
   function handlePhotoUpload(event) {
     const files = Array.from(event.target.files || []);
+
     const newPhotos = files.map((file) => ({
-      id: crypto.randomUUID(),
+      id: makeId(),
       name: file.name,
       url: URL.createObjectURL(file),
     }));
+
     setPhotoPreviews((prev) => [...newPhotos, ...prev]);
+    event.target.value = "";
   }
 
   function removePhoto(id) {
     setPhotoPreviews((prev) => prev.filter((photo) => photo.id !== id));
   }
 
-  const completionCount = currentExercises.filter((ex) => currentPlan.checks[ex]).length;
+  const completionCount = currentExercises.filter(
+    (exercise) => currentPlan?.checks?.[exercise]
+  ).length;
 
   return (
     <div className="min-h-screen bg-neutral-50 p-4 md:p-8">
       <div className="mx-auto max-w-7xl space-y-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
-            <p className="text-sm uppercase tracking-[0.25em] text-neutral-500">Personal training dashboard</p>
-            <h1 className="mt-2 text-3xl font-semibold text-neutral-900">Workout tracker</h1>
+            <p className="text-sm uppercase tracking-[0.25em] text-neutral-500">
+              Personal training dashboard
+            </p>
+            <h1 className="mt-2 text-3xl font-semibold text-neutral-900">
+              Workout tracker
+            </h1>
             <p className="mt-2 max-w-2xl text-sm text-neutral-600">
-              Organize your weekly split, tick off exercises, log weights and reps, and track your body progress in one place.
+              Organize your weekly split, tick off exercises, and keep simple
+              logs and progress entries in one place.
             </p>
           </div>
+
           <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
-            <StatCard label="Selected day" value={selectedDay} icon={<CalendarDays className="h-4 w-4" />} />
-            <StatCard label="Workout" value={currentPlan.workout || "None"} icon={<Dumbbell className="h-4 w-4" />} />
-            <StatCard label="Completed" value={`${completionCount}/${currentExercises.length || 0}`} icon={<CheckCircle2 className="h-4 w-4" />} />
+            <StatCard
+              label="Selected day"
+              value={selectedDay}
+              icon={<CalendarDays className="h-4 w-4" />}
+            />
+            <StatCard
+              label="Workout"
+              value={currentPlan?.workout || "None"}
+              icon={<Dumbbell className="h-4 w-4" />}
+            />
+            <StatCard
+              label="Completed"
+              value={`${completionCount}/${currentExercises.length || 0}`}
+              icon={<CheckCircle2 className="h-4 w-4" />}
+            />
           </div>
         </div>
 
         <Tabs defaultValue="planner" className="space-y-6">
           <TabsList className="grid w-full grid-cols-3 rounded-2xl bg-white p-1 shadow-sm">
-            <TabsTrigger value="planner" className="rounded-xl">Planner</TabsTrigger>
-            <TabsTrigger value="workouts" className="rounded-xl">Workouts</TabsTrigger>
-            <TabsTrigger value="progress" className="rounded-xl">Progress</TabsTrigger>
+            <TabsTrigger value="planner" className="rounded-xl">
+              Planner
+            </TabsTrigger>
+            <TabsTrigger value="workouts" className="rounded-xl">
+              Workouts
+            </TabsTrigger>
+            <TabsTrigger value="progress" className="rounded-xl">
+              Progress
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="planner" className="space-y-6">
@@ -249,11 +311,25 @@ export default function WorkoutTrackerApp() {
                       <div className="flex items-center justify-between gap-3">
                         <div>
                           <p className="font-medium">{day}</p>
-                          <p className={`text-xs ${selectedDay === day ? "text-neutral-300" : "text-neutral-500"}`}>
+                          <p
+                            className={`text-xs ${
+                              selectedDay === day
+                                ? "text-neutral-300"
+                                : "text-neutral-500"
+                            }`}
+                          >
                             {schedule[day].workout || "No workout selected"}
                           </p>
                         </div>
-                        {schedule[day].workout ? <Badge variant="secondary" className="rounded-full">Assigned</Badge> : null}
+
+                        {schedule[day].workout ? (
+                          <Badge
+                            variant="secondary"
+                            className="rounded-full"
+                          >
+                            Assigned
+                          </Badge>
+                        ) : null}
                       </div>
                     </button>
                   ))}
@@ -263,7 +339,9 @@ export default function WorkoutTrackerApp() {
               <div className="space-y-6">
                 <Card className="rounded-3xl border-0 shadow-sm">
                   <CardHeader>
-                    <CardTitle className="text-lg">Assign workout to {selectedDay}</CardTitle>
+                    <CardTitle className="text-lg">
+                      Assign workout to {selectedDay}
+                    </CardTitle>
                   </CardHeader>
                   <CardContent className="grid gap-3 md:grid-cols-3">
                     {Object.keys(workouts).map((workoutName) => (
@@ -271,13 +349,19 @@ export default function WorkoutTrackerApp() {
                         key={workoutName}
                         onClick={() => assignWorkoutToDay(workoutName)}
                         className={`rounded-2xl border p-4 text-left transition ${
-                          currentPlan.workout === workoutName
+                          currentPlan?.workout === workoutName
                             ? "border-neutral-900 bg-neutral-900 text-white"
                             : "border-neutral-200 bg-white hover:border-neutral-400"
                         }`}
                       >
                         <p className="font-medium">{workoutName}</p>
-                        <p className={`mt-1 text-xs ${currentPlan.workout === workoutName ? "text-neutral-300" : "text-neutral-500"}`}>
+                        <p
+                          className={`mt-1 text-xs ${
+                            currentPlan?.workout === workoutName
+                              ? "text-neutral-300"
+                              : "text-neutral-500"
+                          }`}
+                        >
                           {workouts[workoutName].length} exercises
                         </p>
                       </button>
@@ -287,47 +371,79 @@ export default function WorkoutTrackerApp() {
 
                 <Card className="rounded-3xl border-0 shadow-sm">
                   <CardHeader>
-                    <CardTitle className="text-lg">Checklist and training log</CardTitle>
+                    <CardTitle className="text-lg">
+                      Checklist and training log
+                    </CardTitle>
                   </CardHeader>
+
                   <CardContent className="space-y-4">
-                    {!currentPlan.workout ? (
+                    {!currentPlan?.workout ? (
                       <div className="rounded-2xl border border-dashed border-neutral-300 p-8 text-sm text-neutral-500">
-                        Pick a workout for this day to start checking off exercises.
+                        Pick a workout for this day to start checking off
+                        exercises.
                       </div>
                     ) : (
                       currentExercises.map((exercise) => {
-                        const done = !!currentPlan.checks[exercise];
-                        const log = currentPlan.logs[exercise] || { weight: "", reps: "", notes: "" };
+                        const done = !!currentPlan?.checks?.[exercise];
+                        const log = currentPlan?.logs?.[exercise] || {
+                          quickLog: "",
+                          notes: "",
+                        };
+
                         return (
-                          <div key={exercise} className="rounded-2xl border border-neutral-200 p-4">
-                            <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                          <div
+                            key={exercise}
+                            className="rounded-2xl border border-neutral-200 p-4"
+                          >
+                            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                               <button
                                 onClick={() => toggleCheck(exercise)}
                                 className="flex items-center gap-3 text-left"
                               >
-                                {done ? <CheckCircle2 className="h-5 w-5" /> : <Circle className="h-5 w-5" />}
-                                <div>
-                                  <p className={`font-medium ${done ? "line-through text-neutral-400" : "text-neutral-900"}`}>{exercise}</p>
-                                  <p className="text-xs text-neutral-500">Mark done and save your numbers below</p>
-                                </div>
+                                {done ? (
+                                  <CheckCircle2 className="h-5 w-5 shrink-0" />
+                                ) : (
+                                  <Circle className="h-5 w-5 shrink-0" />
+                                )}
+
+                                <p
+                                  className={`font-medium ${
+                                    done
+                                      ? "line-through text-neutral-400"
+                                      : "text-neutral-900"
+                                  }`}
+                                >
+                                  {exercise}
+                                </p>
                               </button>
-                              <Badge className="rounded-full bg-neutral-100 text-neutral-700 hover:bg-neutral-100">{currentPlan.workout}</Badge>
+
+                              <div className="flex items-center gap-2">
+                                <Input
+                                  placeholder="kg / sets / reps"
+                                  value={log.quickLog}
+                                  onChange={(e) =>
+                                    updateLog(
+                                      exercise,
+                                      "quickLog",
+                                      e.target.value
+                                    )
+                                  }
+                                  className="w-full md:w-[180px]"
+                                />
+                                <Badge className="rounded-full bg-neutral-100 text-neutral-700 hover:bg-neutral-100">
+                                  {currentPlan.workout}
+                                </Badge>
+                              </div>
                             </div>
-                            <div className="mt-4 grid gap-3 md:grid-cols-[120px,120px,1fr]">
-                              <Input
-                                placeholder="Weight"
-                                value={log.weight}
-                                onChange={(e) => updateLog(exercise, "weight", e.target.value)}
-                              />
-                              <Input
-                                placeholder="Reps"
-                                value={log.reps}
-                                onChange={(e) => updateLog(exercise, "reps", e.target.value)}
-                              />
-                              <Input
+
+                            <div className="mt-3">
+                              <Textarea
                                 placeholder="Notes"
                                 value={log.notes}
-                                onChange={(e) => updateLog(exercise, "notes", e.target.value)}
+                                onChange={(e) =>
+                                  updateLog(exercise, "notes", e.target.value)
+                                }
+                                className="min-h-[84px]"
                               />
                             </div>
                           </div>
@@ -336,11 +452,18 @@ export default function WorkoutTrackerApp() {
                     )}
 
                     <div className="space-y-2 pt-2">
-                      <p className="text-sm font-medium text-neutral-800">Day notes</p>
+                      <p className="text-sm font-medium text-neutral-800">
+                        Day notes
+                      </p>
                       <Textarea
-                        placeholder="How did today feel? Any pain, PRs, adjustments, cardio notes..."
-                        value={currentPlan.notes}
-                        onChange={(e) => updateSelectedDay((day) => ({ ...day, notes: e.target.value }))}
+                        placeholder="How did today feel? Pain, PRs, adjustments, cardio notes..."
+                        value={currentPlan?.notes || ""}
+                        onChange={(e) =>
+                          updateSelectedDay((day) => ({
+                            ...day,
+                            notes: e.target.value,
+                          }))
+                        }
                         className="min-h-[110px]"
                       />
                     </div>
@@ -365,34 +488,51 @@ export default function WorkoutTrackerApp() {
                   <Button onClick={addWorkout} className="w-full rounded-2xl">
                     <Plus className="mr-2 h-4 w-4" /> Add workout
                   </Button>
-                  <p className="text-xs text-neutral-500">Use this if you want to rename or add a totally custom workout later.</p>
+                  <p className="text-xs text-neutral-500">
+                    Use this if you want to add a custom workout later.
+                  </p>
                 </CardContent>
               </Card>
 
               <Card className="rounded-3xl border-0 shadow-sm">
                 <CardHeader>
-                  <CardTitle className="text-lg">Edit selected workout exercises</CardTitle>
+                  <CardTitle className="text-lg">
+                    Edit selected workout exercises
+                  </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex flex-col gap-3 md:flex-row">
-                    <Input value={currentPlan.workout} readOnly placeholder="Choose a day with a workout" />
+                    <Input
+                      value={currentPlan?.workout || ""}
+                      readOnly
+                      placeholder="Choose a day with a workout"
+                    />
                     <Input
                       value={customExercise}
                       onChange={(e) => setCustomExercise(e.target.value)}
                       placeholder="Add exercise to selected workout"
                     />
-                    <Button onClick={addExerciseToWorkout} className="rounded-2xl">
+                    <Button
+                      onClick={addExerciseToWorkout}
+                      className="rounded-2xl"
+                    >
                       <Plus className="mr-2 h-4 w-4" /> Add
                     </Button>
                   </div>
 
                   <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
                     {Object.entries(workouts).map(([name, exercises]) => (
-                      <div key={name} className="rounded-2xl border border-neutral-200 p-4">
+                      <div
+                        key={name}
+                        className="rounded-2xl border border-neutral-200 p-4"
+                      >
                         <p className="font-medium text-neutral-900">{name}</p>
                         <div className="mt-3 space-y-2">
                           {exercises.map((exercise, idx) => (
-                            <div key={`${name}-${idx}`} className="rounded-xl bg-neutral-50 px-3 py-2 text-sm text-neutral-700">
+                            <div
+                              key={`${name}-${idx}`}
+                              className="rounded-xl bg-neutral-50 px-3 py-2 text-sm text-neutral-700"
+                            >
                               {exercise}
                             </div>
                           ))}
@@ -413,16 +553,69 @@ export default function WorkoutTrackerApp() {
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div className="grid grid-cols-2 gap-3">
-                    <Input placeholder="Weight" value={metrics.weight} onChange={(e) => setMetrics({ ...metrics, weight: e.target.value })} />
-                    <Input placeholder="Body fat %" value={metrics.bodyFat} onChange={(e) => setMetrics({ ...metrics, bodyFat: e.target.value })} />
-                    <Input placeholder="Waist" value={metrics.waist} onChange={(e) => setMetrics({ ...metrics, waist: e.target.value })} />
-                    <Input placeholder="Hips" value={metrics.hips} onChange={(e) => setMetrics({ ...metrics, hips: e.target.value })} />
-                    <Input placeholder="Glutes" value={metrics.glutes} onChange={(e) => setMetrics({ ...metrics, glutes: e.target.value })} />
-                    <Input placeholder="Thigh" value={metrics.thigh} onChange={(e) => setMetrics({ ...metrics, thigh: e.target.value })} />
-                    <Input placeholder="Arm" value={metrics.arm} onChange={(e) => setMetrics({ ...metrics, arm: e.target.value })} />
+                    <Input
+                      placeholder="Weight"
+                      value={metrics.weight}
+                      onChange={(e) =>
+                        setMetrics({ ...metrics, weight: e.target.value })
+                      }
+                    />
+                    <Input
+                      placeholder="Body fat %"
+                      value={metrics.bodyFat}
+                      onChange={(e) =>
+                        setMetrics({ ...metrics, bodyFat: e.target.value })
+                      }
+                    />
+                    <Input
+                      placeholder="Waist"
+                      value={metrics.waist}
+                      onChange={(e) =>
+                        setMetrics({ ...metrics, waist: e.target.value })
+                      }
+                    />
+                    <Input
+                      placeholder="Hips"
+                      value={metrics.hips}
+                      onChange={(e) =>
+                        setMetrics({ ...metrics, hips: e.target.value })
+                      }
+                    />
+                    <Input
+                      placeholder="Glutes"
+                      value={metrics.glutes}
+                      onChange={(e) =>
+                        setMetrics({ ...metrics, glutes: e.target.value })
+                      }
+                    />
+                    <Input
+                      placeholder="Thigh"
+                      value={metrics.thigh}
+                      onChange={(e) =>
+                        setMetrics({ ...metrics, thigh: e.target.value })
+                      }
+                    />
+                    <Input
+                      placeholder="Arm"
+                      value={metrics.arm}
+                      onChange={(e) =>
+                        setMetrics({ ...metrics, arm: e.target.value })
+                      }
+                    />
                   </div>
-                  <Textarea placeholder="Progress notes" value={metrics.notes} onChange={(e) => setMetrics({ ...metrics, notes: e.target.value })} />
-                  <Button onClick={saveProgressSnapshot} className="w-full rounded-2xl">
+
+                  <Textarea
+                    placeholder="Progress notes"
+                    value={metrics.notes}
+                    onChange={(e) =>
+                      setMetrics({ ...metrics, notes: e.target.value })
+                    }
+                  />
+
+                  <Button
+                    onClick={saveProgressSnapshot}
+                    className="w-full rounded-2xl"
+                  >
                     <Save className="mr-2 h-4 w-4" /> Save progress entry
                   </Button>
                 </CardContent>
@@ -435,16 +628,39 @@ export default function WorkoutTrackerApp() {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <label className="flex cursor-pointer items-center justify-center rounded-2xl border border-dashed border-neutral-300 p-6 text-sm text-neutral-600 hover:bg-neutral-50">
-                      <input type="file" accept="image/*" multiple className="hidden" onChange={handlePhotoUpload} />
-                      <span className="flex items-center gap-2"><Upload className="h-4 w-4" /> Upload progress photos</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        className="hidden"
+                        onChange={handlePhotoUpload}
+                      />
+                      <span className="flex items-center gap-2">
+                        <Upload className="h-4 w-4" />
+                        Upload progress photos
+                      </span>
                     </label>
+
                     <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                       {photoPreviews.map((photo) => (
-                        <div key={photo.id} className="overflow-hidden rounded-2xl border border-neutral-200 bg-white">
-                          <img src={photo.url} alt={photo.name} className="h-56 w-full object-cover" />
+                        <div
+                          key={photo.id}
+                          className="overflow-hidden rounded-2xl border border-neutral-200 bg-white"
+                        >
+                          <img
+                            src={photo.url}
+                            alt={photo.name}
+                            className="h-56 w-full object-cover"
+                          />
                           <div className="flex items-center justify-between gap-3 p-3">
-                            <p className="truncate text-sm text-neutral-700">{photo.name}</p>
-                            <Button variant="ghost" size="icon" onClick={() => removePhoto(photo.id)}>
+                            <p className="truncate text-sm text-neutral-700">
+                              {photo.name}
+                            </p>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => removePhoto(photo.id)}
+                            >
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
@@ -465,16 +681,30 @@ export default function WorkoutTrackerApp() {
                       </div>
                     ) : (
                       progressEntries.map((entry) => (
-                        <div key={entry.id} className="rounded-2xl border border-neutral-200 p-4">
+                        <div
+                          key={entry.id}
+                          className="rounded-2xl border border-neutral-200 p-4"
+                        >
                           <div className="flex items-start justify-between gap-3">
                             <div>
-                              <p className="font-medium text-neutral-900">{entry.date}</p>
-                              <p className="mt-1 text-sm text-neutral-500">Weight: {entry.weight || "-"} · Body fat: {entry.bodyFat || "-"}</p>
+                              <p className="font-medium text-neutral-900">
+                                {entry.date}
+                              </p>
+                              <p className="mt-1 text-sm text-neutral-500">
+                                Weight: {entry.weight || "-"} · Body fat:{" "}
+                                {entry.bodyFat || "-"}
+                              </p>
                             </div>
-                            <Button variant="ghost" size="icon" onClick={() => deleteProgressEntry(entry.id)}>
+
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => deleteProgressEntry(entry.id)}
+                            >
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
+
                           <div className="mt-3 grid grid-cols-2 gap-2 text-sm text-neutral-700 md:grid-cols-3">
                             <Metric label="Waist" value={entry.waist} />
                             <Metric label="Hips" value={entry.hips} />
@@ -504,7 +734,9 @@ function StatCard({ label, value, icon }) {
         {icon}
         <span>{label}</span>
       </div>
-      <p className="mt-2 truncate text-sm font-semibold text-neutral-900">{value}</p>
+      <p className="mt-2 truncate text-sm font-semibold text-neutral-900">
+        {value}
+      </p>
     </div>
   );
 }
@@ -512,9 +744,10 @@ function StatCard({ label, value, icon }) {
 function Metric({ label, value }) {
   return (
     <div className="rounded-xl bg-neutral-50 px-3 py-2">
-      <p className="text-xs uppercase tracking-wide text-neutral-500">{label}</p>
+      <p className="text-xs uppercase tracking-wide text-neutral-500">
+        {label}
+      </p>
       <p className="mt-1 break-words">{value || "-"}</p>
     </div>
   );
 }
-
